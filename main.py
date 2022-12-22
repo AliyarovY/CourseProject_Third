@@ -13,16 +13,34 @@ def main():
         per_page = int(input('Per page = '))
     except:
         per_page = 10
-    file = input('File = ') or 'vacancies'
+    file = 'vacancies'
     text = input('Profession = ') or 'Python'
 
-    for page in range(pages):
+    # cache work
+    begin = 0
+    with open('cache_record') as cache_r:
+        v_count = pages * per_page
+        ch = json.load(cache_r)
+        if text in ch:
+            begin = v_count // per_page - ch[text] // per_page
+            if begin < 0:
+                begin = pages
+            ch[text] = v_count
+        else:
+            ch[text] = v_count
+    with open('cache_record', 'w') as cache_w:
+        json.dump(ch, cache_w, indent=4)
+
+
+    for page in range(begin, pages):
         try:
+            with open(file, 'r', encoding='utf-8') as f_r:
+                nn = json.load(f_r)
             with open(file, 'w', encoding='utf-8') as f_w:
                 hh = HH(page, text, per_page).data
                 sj = SJ(page, text, per_page).data
-                json.dump(hh, f_w, indent=4, ensure_ascii=False)
-                json.dump(sj, f_w, indent=4, ensure_ascii=False)
+                res_dmp = sj + hh + nn
+                json.dump(res_dmp, f_w, indent=4, ensure_ascii=False)
         except KeyError:
             print('pages ran out')
             break
